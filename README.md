@@ -1,39 +1,138 @@
 # Downloads Organizer
 
-A safe Python script that automatically organizes files in the user's **Downloads** folder based on their file extensions.
+A safe and simple Python tool that automatically organizes files inside your **Downloads** folder based on their file extensions.
 
-The organizer creates a complete preview before making any changes and requires explicit confirmation before moving files.
-
----
+The organizer creates a preview before moving anything and requires explicit confirmation before making changes.
 
 ## Features
 
 * Automatically detects the user's Downloads folder
 * Organizes files by file extension
-* Supports images, documents, videos, audio, archives, installers, code, game files, and many other formats
+* Supports images, documents, videos, audio, archives, installers, code files, game files, and many other formats
 * Moves unknown file types to the `Other` folder
 * Moves files without extensions to the `No Extension` folder
 * Moves ambiguous file types to the `Review` folder
 * Automatically handles duplicate filenames
-* Never overwrites existing files
+* Never intentionally overwrites existing files
 * Creates destination folders only when needed
 * Does not move existing folders
 * Does not extract archives
 * Skips files that are still being downloaded
 * Skips symbolic links
 * Skips common Windows system files
-* Skips the organizer script itself if it is located inside Downloads
-* Creates one exact organization plan before making changes
+* Skips the organizer script itself
+* Creates an exact organization plan before moving files
 * Requires confirmation using `MOVE <number>`
-* Continues processing even if one file causes an error
+* Continues working if an individual file causes an error
 * Displays scan and final organization statistics
-* Uses only the Python standard library
+* Uses only Python's standard library
 
 ---
 
-## Example
+# Quick Start
 
-### Before
+## 1. Download the project
+
+Download the repository from GitHub.
+
+After extracting it, the folder should contain:
+
+```text
+downloads-organizer/
+├── organizer.py
+├── run_organizer.bat
+├── README.md
+└── .gitignore
+```
+
+## 2. Start the organizer
+
+Double-click:
+
+```text
+run_organizer.bat
+```
+
+That's it.
+
+The launcher will automatically try to start the organizer using Python.
+
+You do not need to manually open PowerShell.
+
+---
+
+# Using the Organizer
+
+After starting `run_organizer.bat`, the program scans your Downloads folder.
+
+It then displays a preview of the planned operations.
+
+Example:
+
+```text
+============================================================
+PREVIEW - NO FILES HAVE BEEN MOVED
+============================================================
+
+[PLAN] photo.png -> Images/photo.png
+[PLAN] invoice.pdf -> Documents/invoice.pdf
+[PLAN] setup.exe -> Installers/setup.exe
+[PLAN] modpack.7z -> Archives/modpack.7z
+```
+
+At this stage, no files have been moved.
+
+The program also displays a summary:
+
+```text
+============================================================
+SCAN SUMMARY
+============================================================
+Files planned:            4
+Folders skipped:          5
+Active downloads skipped: 1
+System files skipped:     1
+Symlinks skipped:         0
+Organizer skipped:        0
+Planning errors:          0
+```
+
+---
+
+# Confirmation
+
+Before moving any files, the organizer requires confirmation.
+
+For example:
+
+```text
+4 file(s) will be moved inside your Downloads folder.
+
+Type "MOVE 4" to continue.
+```
+
+To continue, type exactly:
+
+```text
+MOVE 4
+```
+
+The number must match the number displayed by the program.
+
+Any other input cancels the operation.
+
+Example:
+
+```text
+Operation cancelled.
+No files were moved.
+```
+
+---
+
+# Example
+
+Before:
 
 ```text
 Downloads/
@@ -46,7 +145,7 @@ Downloads/
 └── notes
 ```
 
-### After
+After:
 
 ```text
 Downloads/
@@ -74,169 +173,19 @@ Downloads/
 
 ---
 
-# How to Use
-
-## 1. Download the script
-
-Download:
-
-```text
-organizer.py
-```
-
-from this GitHub repository.
-
-You can save it anywhere, for example on your Desktop.
-
----
-
-## 2. Open PowerShell in the script folder
-
-Open the folder containing:
-
-```text
-organizer.py
-```
-
-Right-click inside the folder and select:
-
-```text
-Open in Terminal
-```
-
-You can also open PowerShell manually inside that folder.
-
----
-
-## 3. Run the script
-
-Type:
-
-```powershell
-python organizer.py
-```
-
-and press **Enter**.
-
-If `python` does not work, try:
-
-```powershell
-py organizer.py
-```
-
-> It is recommended to run the script through PowerShell or another terminal instead of double-clicking the `.py` file.
-
----
-
-## 4. Review the preview
-
-The organizer first scans the Downloads folder and creates an exact plan.
-
-Example:
-
-```text
-============================================================
-PREVIEW - NO FILES HAVE BEEN MOVED
-============================================================
-
-[PLAN] photo.png -> Images/photo.png
-[PLAN] invoice.pdf -> Documents/invoice.pdf
-[PLAN] setup.exe -> Installers/setup.exe
-[PLAN] modpack.7z -> Archives/modpack.7z
-```
-
-At this stage:
-
-```text
-NO FILES HAVE BEEN MOVED
-```
-
-The script also displays a scan summary:
-
-```text
-============================================================
-SCAN SUMMARY
-============================================================
-Files planned:            4
-Folders skipped:          5
-Active downloads skipped: 1
-System files skipped:     1
-Symlinks skipped:         0
-Organizer skipped:        0
-Planning errors:          0
-```
-
----
-
-## 5. Confirm the operation
-
-After the preview, the organizer displays the number of files that will be moved.
-
-Example:
-
-```text
-4 file(s) will be moved inside your Downloads folder.
-
-Type "MOVE 4" to continue.
-```
-
-To continue, type exactly:
-
-```text
-MOVE 4
-```
-
-The number must match the number displayed by the program.
-
-Any other input cancels the operation.
-
-Example:
-
-```text
-Operation cancelled.
-No files were moved.
-```
-
----
-
-## 6. Organization
-
-After confirmation, the script executes the exact plan shown in the preview.
-
-Example:
-
-```text
-[MOVED] photo.png -> Images/photo.png
-[MOVED] invoice.pdf -> Documents/invoice.pdf
-[MOVED] setup.exe -> Installers/setup.exe
-[MOVED] modpack.7z -> Archives/modpack.7z
-```
-
-When finished, the organizer displays a summary:
-
-```text
-============================================================
-ORGANIZATION SUMMARY
-============================================================
-Files planned:   4
-Files moved:     4
-Files not moved: 0
-Errors:          0
-```
-
----
-
 # Safety
 
-The organizer includes several safeguards before changing any files.
+The organizer includes several safeguards.
 
-### Dry Preview
+## Preview
 
-The script always shows the complete organization plan before moving anything.
+The script always shows the exact organization plan before moving files.
 
-### Explicit Confirmation
+No files are moved during the preview.
 
-The user must type:
+## Explicit Confirmation
+
+The user must confirm using:
 
 ```text
 MOVE <number>
@@ -248,15 +197,15 @@ For example:
 MOVE 25
 ```
 
-### Existing Folders
+## Existing Folders
 
-Existing folders inside Downloads are left untouched.
+Existing folders inside Downloads are not moved.
 
-### Active Downloads
+## Active Downloads
 
 Files that appear to still be downloading are skipped.
 
-Examples include:
+Examples:
 
 ```text
 .crdownload
@@ -273,7 +222,7 @@ Temporary Microsoft Office files beginning with:
 
 are also skipped.
 
-### System Files
+## Windows System Files
 
 Common Windows system files such as:
 
@@ -284,11 +233,11 @@ Thumbs.db
 
 are skipped.
 
-### Symbolic Links
+## Symbolic Links
 
-Symbolic links are skipped to avoid accidentally modifying files outside the Downloads folder.
+Symbolic links are skipped to avoid accidentally affecting files outside the Downloads folder.
 
-### Organizer Protection
+## Organizer Protection
 
 If `organizer.py` itself is located inside the Downloads folder, the script will not move itself.
 
@@ -296,15 +245,15 @@ If `organizer.py` itself is located inside the Downloads folder, the script will
 
 # Duplicate Files
 
-Existing files are never intentionally overwritten.
+Existing files are not intentionally overwritten.
 
-If the destination already contains:
+If this file already exists:
 
 ```text
 photo.png
 ```
 
-the organizer searches for a free filename:
+the organizer creates a unique filename:
 
 ```text
 photo_1.png
@@ -321,7 +270,7 @@ Images/
 └── photo_2.png
 ```
 
-The organizer also reserves filenames while creating the preview, preventing two planned files from accidentally receiving the same destination.
+The organizer also reserves filenames while creating the preview, preventing planned files from receiving the same destination.
 
 ---
 
@@ -329,9 +278,9 @@ The organizer also reserves filenames while creating the preview, preventing two
 
 Archive files are only moved.
 
-They are **never extracted or modified**.
+They are never extracted or modified.
 
-Supported archive formats include:
+Examples:
 
 ```text
 .zip
@@ -351,7 +300,7 @@ Supported archive formats include:
 .zst
 ```
 
-Example:
+For example:
 
 ```text
 Downloads/modpack.7z
@@ -369,7 +318,7 @@ The contents of the archive remain unchanged.
 
 # File Categories
 
-The organizer supports categories such as:
+The organizer supports categories including:
 
 ```text
 Images
@@ -412,25 +361,23 @@ Other
 No Extension
 ```
 
-Unknown extensions are moved to:
+Unknown file extensions are moved to:
 
 ```text
 Other
 ```
 
-Files without an extension are moved to:
+Files without extensions are moved to:
 
 ```text
 No Extension
 ```
 
-Some ambiguous extensions are moved to:
+Ambiguous file extensions are moved to:
 
 ```text
 Review
 ```
-
-so the user can decide what to do with them manually.
 
 ---
 
@@ -438,26 +385,50 @@ so the user can decide what to do with them manually.
 
 If one file cannot be moved, the entire program does not stop.
 
-Instead, the organizer displays an error:
+Instead, the organizer displays an error and continues processing the remaining files.
+
+Example:
 
 ```text
 [ERROR] example.pdf: ...
 ```
 
-and continues with the remaining files.
-
-The final summary shows how many files were successfully moved and how many errors occurred.
+The final summary shows how many files were moved successfully and how many errors occurred.
 
 ---
 
-# Requirements
+# Manual Start
 
-* Python 3
-* Windows
+If you prefer not to use the Windows launcher, you can run the Python script manually.
+
+Open PowerShell or another terminal inside the project folder and run:
+
+```powershell
+python organizer.py
+```
+
+If `python` is not recognized, try:
+
+```powershell
+py organizer.py
+```
+
+---
+
+# Python Requirement
+
+The organizer requires:
+
+```text
+Python 3
+Windows
+```
 
 No additional Python packages are required.
 
 The project uses only Python's standard library.
+
+If Python is missing, `run_organizer.bat` will display an error instead of immediately closing.
 
 ---
 
@@ -466,29 +437,18 @@ The project uses only Python's standard library.
 ```text
 downloads-organizer/
 ├── organizer.py
+├── run_organizer.bat
 ├── README.md
 └── .gitignore
 ```
 
----
+`organizer.py` contains the main application.
 
-# Quick Start
+`run_organizer.bat` provides an easier way to start the application on Windows.
 
-```text
-1. Download organizer.py
-2. Open its folder
-3. Right-click → Open in Terminal
-4. Run: python organizer.py
-5. Review the preview
-6. Type the requested MOVE <number> confirmation
-7. Done
-```
+`README.md` contains the project documentation.
 
-If `python` is not recognized, use:
-
-```powershell
-py organizer.py
-```
+`.gitignore` tells Git which unnecessary files should not be uploaded.
 
 ---
 
@@ -496,12 +456,12 @@ py organizer.py
 
 Always review the preview before confirming the operation.
 
-The project includes multiple safeguards, but keeping backups of important files is always recommended.
+Although the organizer includes multiple safety mechanisms, keeping backups of important files is recommended.
 
-Use the script at your own responsibility.
+Use the program at your own responsibility.
 
 ---
 
 # Author
-GOFR
+
 Created as a Python learning project and practical file automation tool.

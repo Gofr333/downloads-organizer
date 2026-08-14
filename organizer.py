@@ -1,11 +1,37 @@
 from pathlib import Path
+import os
+import sys
+
+try:
+    import winreg
+except ImportError:
+    winreg = None
 
 
 # ==========================================
 # SETTINGS
 # ==========================================
 
-DOWNLOADS_FOLDER = Path.home() / "Downloads"
+def get_downloads_folder():
+    """Return the real Windows Downloads folder when possible."""
+    if os.name == "nt" and winreg is not None:
+        try:
+            key_path = (
+                r"Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"
+            )
+            downloads_guid = "{374DE290-123F-4565-9164-39C4925E467B}"
+
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path) as key:
+                value, _ = winreg.QueryValueEx(key, downloads_guid)
+
+            return Path(os.path.expandvars(value)).expanduser()
+        except OSError:
+            pass
+
+    return Path.home() / "Downloads"
+
+
+DOWNLOADS_FOLDER = get_downloads_folder()
 
 # Files that usually mean a download is still in progress.
 # They are skipped so the organizer does not interfere with active downloads.
@@ -496,7 +522,12 @@ def create_plan():
         "planning_errors": 0,
     }
 
-    script_path = Path(__file__).resolve()
+    # In a PyInstaller build, sys.executable points to DownloadsOrganizer.exe.
+    # In normal Python mode, protect organizer.py instead.
+    if getattr(sys, "frozen", False):
+        program_path = Path(sys.executable).resolve()
+    else:
+        program_path = Path(__file__).resolve()
 
     try:
         items = sorted(
@@ -510,7 +541,7 @@ def create_plan():
     for item in items:
         try:
             # Never move the organizer itself if it is stored in Downloads.
-            if item.resolve() == script_path:
+            if item.resolve() == program_path:
                 stats["self_skipped"] += 1
                 continue
 

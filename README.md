@@ -1,71 +1,98 @@
 # Downloads Organizer
 
-A safe and simple Python tool that automatically organizes files inside your **Downloads** folder based on their file extensions.
+A safe Windows file organizer written in Python. It scans the user's **Downloads** folder, creates an exact preview, and moves files into categories only after explicit confirmation.
 
-The organizer creates a preview before moving anything and requires explicit confirmation before making changes.
+## Download for Windows
+
+**Recommended for most users:** download the ready-to-run Windows executable from the latest release:
+
+[Download DownloadsOrganizer.exe](https://github.com/Gofr333/downloads-organizer/releases/latest/download/DownloadsOrganizer.exe)
+
+No Python installation is required when using the `.exe` version.
+
+## Quick Start
+
+1. Download `DownloadsOrganizer.exe` using the link above.
+2. Double-click `DownloadsOrganizer.exe`.
+3. Review the complete preview. No files have been moved yet.
+4. The program will show how many files are planned, for example:
+
+```text
+Type "MOVE 15" to continue.
+```
+
+5. Type the exact confirmation shown by the program:
+
+```text
+MOVE 15
+```
+
+6. Review the final summary.
+
+Any other confirmation cancels the operation.
+
+> The executable is currently unsigned. Windows may display a security/reputation warning for software that has not been code-signed. If you do not trust the binary, do not bypass the warning; review the source code and run `organizer.py` with Python instead.
 
 ## Features
 
-* Automatically detects the user's Downloads folder
-* Organizes files by file extension
-* Supports images, documents, videos, audio, archives, installers, code files, game files, and many other formats
-* Moves unknown file types to the `Other` folder
-* Moves files without extensions to the `No Extension` folder
-* Moves ambiguous file types to the `Review` folder
-* Automatically handles duplicate filenames
-* Never intentionally overwrites existing files
-* Creates destination folders only when needed
-* Does not move existing folders
-* Does not extract archives
-* Skips files that are still being downloaded
-* Skips symbolic links
-* Skips common Windows system files
-* Skips the organizer script itself
-* Creates an exact organization plan before moving files
-* Requires confirmation using `MOVE <number>`
-* Continues working if an individual file causes an error
-* Displays scan and final organization statistics
-* Uses only Python's standard library
+- Detects the Windows Downloads folder, including common redirected locations
+- Organizes files by extension
+- Supports images, documents, spreadsheets, presentations, videos, audio, archives, installers, code, game files, and many other formats
+- Moves unknown extensions to `Other`
+- Moves files without extensions to `No Extension`
+- Moves ambiguous extensions to `Review`
+- Creates one exact plan before changing anything
+- Requires confirmation using `MOVE <number>`
+- Handles duplicate filenames automatically
+- Does not intentionally overwrite existing files
+- Creates destination folders only when needed
+- Leaves existing folders untouched
+- Does not extract archives
+- Skips files that appear to still be downloading
+- Skips symbolic links
+- Skips common Windows system files
+- Protects the running organizer itself, including the packaged `.exe`
+- Continues processing if an individual file causes an error
+- Displays scan and final statistics
+- Uses only Python's standard library at runtime
 
----
+## Example
 
-# Quick Start
-
-## 1. Download the project
-
-Download the repository from GitHub.
-
-After extracting it, the folder should contain:
+Before:
 
 ```text
-downloads-organizer/
-├── organizer.py
-├── run_organizer.bat
-├── README.md
-└── .gitignore
+Downloads/
+├── photo.png
+├── invoice.pdf
+├── movie.mp4
+├── setup.exe
+├── modpack.7z
+└── unknown.xyz
 ```
 
-## 2. Start the organizer
-
-Double-click:
+After:
 
 ```text
-run_organizer.bat
+Downloads/
+├── Images/
+│   └── photo.png
+├── Documents/
+│   └── invoice.pdf
+├── Videos/
+│   └── movie.mp4
+├── Installers/
+│   └── setup.exe
+├── Archives/
+│   └── modpack.7z
+└── Other/
+    └── unknown.xyz
 ```
 
-That's it.
+## Safety
 
-The launcher will automatically try to start the organizer using Python.
+### Exact preview
 
-You do not need to manually open PowerShell.
-
----
-
-# Using the Organizer
-
-After starting `run_organizer.bat`, the program scans your Downloads folder.
-
-It then displays a preview of the planned operations.
+The organizer scans the Downloads folder once and creates the plan that will be executed after confirmation.
 
 Example:
 
@@ -77,135 +104,31 @@ PREVIEW - NO FILES HAVE BEEN MOVED
 [PLAN] photo.png -> Images/photo.png
 [PLAN] invoice.pdf -> Documents/invoice.pdf
 [PLAN] setup.exe -> Installers/setup.exe
-[PLAN] modpack.7z -> Archives/modpack.7z
 ```
 
-At this stage, no files have been moved.
+### Explicit confirmation
 
-The program also displays a summary:
+If 3 files are planned, the program asks for:
 
 ```text
-============================================================
-SCAN SUMMARY
-============================================================
-Files planned:            4
-Folders skipped:          5
-Active downloads skipped: 1
-System files skipped:     1
-Symlinks skipped:         0
-Organizer skipped:        0
-Planning errors:          0
+MOVE 3
 ```
 
----
+The number must match the current plan.
 
-# Confirmation
+### Duplicate protection
 
-Before moving any files, the organizer requires confirmation.
-
-For example:
+If `photo.png` already exists in the destination folder, the organizer looks for a free name:
 
 ```text
-4 file(s) will be moved inside your Downloads folder.
-
-Type "MOVE 4" to continue.
+photo.png
+photo_1.png
+photo_2.png
 ```
 
-To continue, type exactly:
+### Active downloads
 
-```text
-MOVE 4
-```
-
-The number must match the number displayed by the program.
-
-Any other input cancels the operation.
-
-Example:
-
-```text
-Operation cancelled.
-No files were moved.
-```
-
----
-
-# Example
-
-Before:
-
-```text
-Downloads/
-├── photo.png
-├── invoice.pdf
-├── movie.mp4
-├── setup.exe
-├── modpack.7z
-├── unknown.xyz
-└── notes
-```
-
-After:
-
-```text
-Downloads/
-├── Images/
-│   └── photo.png
-│
-├── Documents/
-│   └── invoice.pdf
-│
-├── Videos/
-│   └── movie.mp4
-│
-├── Installers/
-│   └── setup.exe
-│
-├── Archives/
-│   └── modpack.7z
-│
-├── Other/
-│   └── unknown.xyz
-│
-└── No Extension/
-    └── notes
-```
-
----
-
-# Safety
-
-The organizer includes several safeguards.
-
-## Preview
-
-The script always shows the exact organization plan before moving files.
-
-No files are moved during the preview.
-
-## Explicit Confirmation
-
-The user must confirm using:
-
-```text
-MOVE <number>
-```
-
-For example:
-
-```text
-MOVE 25
-```
-
-## Existing Folders
-
-Existing folders inside Downloads are not moved.
-
-## Active Downloads
-
-Files that appear to still be downloading are skipped.
-
-Examples:
+Files with temporary download extensions are skipped, including:
 
 ```text
 .crdownload
@@ -214,73 +137,13 @@ Examples:
 .download
 ```
 
-Temporary Microsoft Office files beginning with:
+Temporary Microsoft Office files beginning with `~$` are also skipped.
 
-```text
-~$
-```
+### Archives
 
-are also skipped.
+Archives are moved only. They are never extracted by this program.
 
-## Windows System Files
-
-Common Windows system files such as:
-
-```text
-desktop.ini
-Thumbs.db
-```
-
-are skipped.
-
-## Symbolic Links
-
-Symbolic links are skipped to avoid accidentally affecting files outside the Downloads folder.
-
-## Organizer Protection
-
-If `organizer.py` itself is located inside the Downloads folder, the script will not move itself.
-
----
-
-# Duplicate Files
-
-Existing files are not intentionally overwritten.
-
-If this file already exists:
-
-```text
-photo.png
-```
-
-the organizer creates a unique filename:
-
-```text
-photo_1.png
-photo_2.png
-photo_3.png
-```
-
-Example:
-
-```text
-Images/
-├── photo.png
-├── photo_1.png
-└── photo_2.png
-```
-
-The organizer also reserves filenames while creating the preview, preventing planned files from receiving the same destination.
-
----
-
-# Archives
-
-Archive files are only moved.
-
-They are never extracted or modified.
-
-Examples:
+Examples include:
 
 ```text
 .zip
@@ -288,35 +151,9 @@ Examples:
 .7z
 .tar
 .gz
-.gzip
-.bz2
-.xz
-.tgz
-.tbz
-.tbz2
-.txz
-.cab
-.ace
-.zst
 ```
 
-For example:
-
-```text
-Downloads/modpack.7z
-```
-
-becomes:
-
-```text
-Downloads/Archives/modpack.7z
-```
-
-The contents of the archive remain unchanged.
-
----
-
-# File Categories
+## Categories
 
 The organizer supports categories including:
 
@@ -361,107 +198,97 @@ Other
 No Extension
 ```
 
-Unknown file extensions are moved to:
+## Run From Source
 
-```text
-Other
-```
-
-Files without extensions are moved to:
-
-```text
-No Extension
-```
-
-Ambiguous file extensions are moved to:
-
-```text
-Review
-```
-
----
-
-# Error Handling
-
-If one file cannot be moved, the entire program does not stop.
-
-Instead, the organizer displays an error and continues processing the remaining files.
-
-Example:
-
-```text
-[ERROR] example.pdf: ...
-```
-
-The final summary shows how many files were moved successfully and how many errors occurred.
-
----
-
-# Manual Start
-
-If you prefer not to use the Windows launcher, you can run the Python script manually.
-
-Open PowerShell or another terminal inside the project folder and run:
+Developers and users who prefer to inspect and run the Python source can clone the repository:
 
 ```powershell
+git clone https://github.com/Gofr333/downloads-organizer.git
+cd downloads-organizer
 python organizer.py
 ```
 
-If `python` is not recognized, try:
+If `python` is not recognized on Windows, try:
 
 ```powershell
 py organizer.py
 ```
 
----
+Running from source requires Python 3. No third-party runtime packages are required.
 
-# Python Requirement
+## Windows Executable Build
 
-The organizer requires:
+The repository contains a GitHub Actions workflow that builds `DownloadsOrganizer.exe` on a Windows runner using PyInstaller.
 
-```text
-Python 3
-Windows
+The generated executable is not committed to the source branch. Release binaries are attached to GitHub Releases instead.
+
+### Create a new release
+
+After committing and pushing your changes, create and push a version tag:
+
+```powershell
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
-No additional Python packages are required.
+GitHub Actions will then:
 
-The project uses only Python's standard library.
+1. Start a Windows build environment.
+2. Install Python and PyInstaller.
+3. Build `DownloadsOrganizer.exe`.
+4. Generate a SHA-256 checksum.
+5. Create a GitHub Release for the tag.
+6. Attach the executable and checksum to that release.
 
-If Python is missing, `run_organizer.bat` will display an error instead of immediately closing.
+The workflow can also be started manually from the **Actions** tab. A manual run creates a downloadable workflow artifact but does not create a GitHub Release.
 
----
+## Verify the Download
 
-# Project Structure
+Each release includes:
+
+```text
+DownloadsOrganizer.exe
+DownloadsOrganizer.sha256
+```
+
+On Windows, the executable checksum can be calculated with:
+
+```powershell
+Get-FileHash .\DownloadsOrganizer.exe -Algorithm SHA256
+```
+
+Compare the displayed hash with the value in `DownloadsOrganizer.sha256` from the same release.
+
+## Project Structure
 
 ```text
 downloads-organizer/
+├── .github/
+│   └── workflows/
+│       └── build-release.yml
 ├── organizer.py
-├── run_organizer.bat
 ├── README.md
 └── .gitignore
 ```
 
-`organizer.py` contains the main application.
+## Requirements
 
-`run_organizer.bat` provides an easier way to start the application on Windows.
+### Ready-to-run executable
 
-`README.md` contains the project documentation.
+- Windows
+- Python is **not** required
 
-`.gitignore` tells Git which unnecessary files should not be uploaded.
+### Running from source
 
----
+- Windows
+- Python 3
 
-# Disclaimer
+## Disclaimer
 
-Always review the preview before confirming the operation.
-
-Although the organizer includes multiple safety mechanisms, keeping backups of important files is recommended.
+Always review the preview before confirming an operation. The project includes multiple safeguards, but keeping backups of important files is recommended.
 
 Use the program at your own responsibility.
 
----
-
-# Author
+## Author
 
 Created as a Python learning project and practical file automation tool.

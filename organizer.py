@@ -5,10 +5,25 @@ from pathlib import Path
 # SETTINGS
 # ==========================================
 
-downloads_folder = Path.home() / "Downloads"
+DOWNLOADS_FOLDER = Path.home() / "Downloads"
+
+# Files that usually mean a download is still in progress.
+# They are skipped so the organizer does not interfere with active downloads.
+ACTIVE_DOWNLOAD_SUFFIXES = {
+    ".crdownload",
+    ".part",
+    ".partial",
+    ".download",
+}
+
+# Common system files that should stay where they are.
+SKIPPED_FILENAMES = {
+    "desktop.ini",
+    "thumbs.db",
+}
 
 
-file_types = {
+FILE_TYPES = {
 
     # ==========================================
     # IMAGES
@@ -443,112 +458,238 @@ file_types = {
     ".3ds": "Review",
 }
 
+# ==========================================
+# HELPERS
+# ==========================================
+
+def get_folder_name(item):
+    extension = item.suffix.lower()
+
+    if not extension:
+        return "No Extension"
+
+    return FILE_TYPES.get(extension, "Other")
+
+
+def get_unique_destination(item, destination_folder, reserved_paths):
+    destination_path = destination_folder / item.name
+    counter = 1
+
+    while destination_path.exists() or destination_path in reserved_paths:
+        new_name = f"{item.stem}_{counter}{item.suffix}"
+        destination_path = destination_folder / new_name
+        counter += 1
+
+    return destination_path
+
+
+def create_plan():
+    plan = []
+    reserved_paths = set()
+
+    stats = {
+        "folders_skipped": 0,
+        "active_downloads_skipped": 0,
+        "system_files_skipped": 0,
+        "symlinks_skipped": 0,
+        "self_skipped": 0,
+        "planning_errors": 0,
+    }
+
+    script_path = Path(__file__).resolve()
+
+    try:
+        items = sorted(
+            DOWNLOADS_FOLDER.iterdir(),
+            key=lambda path: path.name.lower(),
+        )
+    except OSError as error:
+        print(f"[ERROR] Could not read Downloads folder: {error}")
+        return [], stats
+
+    for item in items:
+        try:
+            # Never move the organizer itself if it is stored in Downloads.
+            if item.resolve() == script_path:
+                stats["self_skipped"] += 1
+                continue
+
+            # Skip symbolic links to avoid surprising changes outside Downloads.
+            if item.is_symlink():
+                stats["symlinks_skipped"] += 1
+                continue
+
+            # Existing folders are intentionally left untouched.
+            if not item.is_file():
+                stats["folders_skipped"] += 1
+                continue
+
+            # Skip common Windows system files.
+            if item.name.lower() in SKIPPED_FILENAMES:
+                stats["system_files_skipped"] += 1
+                continue
+
+            # Skip files that are probably still being downloaded.
+            if (
+                item.suffix.lower() in ACTIVE_DOWNLOAD_SUFFIXES
+                or item.name.startswith("~$")
+            ):
+                stats["active_downloads_skipped"] += 1
+                continue
+
+            folder_name = get_folder_name(item)
+            destination_folder = DOWNLOADS_FOLDER / folder_name
+
+            # A file with the same name as a category folder would make
+            # creating that folder impossible, so skip it safely.
+            if destination_folder.exists() and not destination_folder.is_dir():
+                stats["planning_errors"] += 1
+                print(
+                    f"[PLAN ERROR] Cannot use category '{folder_name}' because "
+                    f"'{destination_folder.name}' already exists as a file."
+                )
+                continue
+
+            destination_path = get_unique_destination(
+                item,
+                destination_folder,
+                reserved_paths,
+            )
+
+            reserved_paths.add(destination_path)
+            plan.append((item, destination_path, folder_name))
+
+        except OSError as error:
+            stats["planning_errors"] += 1
+            print(f"[PLAN ERROR] {item.name}: {error}")
+
+    return plan, stats
+
 
 # ==========================================
-# ORGANIZER
+# PREVIEW
 # ==========================================
 
-def organize_files(dry_run=True):
+def show_preview(plan, stats):
+    print()
+    print("=" * 60)
+    print("PREVIEW - NO FILES HAVE BEEN MOVED")
+    print("=" * 60)
+    print()
 
-    for item in downloads_folder.iterdir():
+    for source, destination, folder_name in plan:
+        print(
+            f"[PLAN] {source.name} -> "
+            f"{folder_name}/{destination.name}"
+        )
 
-        # Skip folders - organize files only
-        if item.is_file():
-
-            # Get the file extension
-            extension = item.suffix.lower()
-
-            # File without an extension
-            if not extension:
-                folder_name = "No Extension"
-
-            # Known or unknown extension
-            else:
-                folder_name = file_types.get(
-                    extension,
-                    "Other"
-                )
-
-            # Build destination paths
-            destination_folder = downloads_folder / folder_name
-            destination_path = destination_folder / item.name
-
-            # Handle duplicate file names
-            if destination_path.exists():
-
-                counter = 1
-
-                while destination_path.exists():
-
-                    new_name = (
-                        f"{item.stem}_{counter}{item.suffix}"
-                    )
-
-                    destination_path = (
-                        destination_folder / new_name
-                    )
-
-                    counter += 1
-
-            # ==========================================
-            # DRY RUN MODE
-            # ==========================================
-
-            if dry_run:
-
-                print(
-                    f"[DRY RUN] "
-                    f"{item.name} -> "
-                    f"{folder_name}/{destination_path.name}"
-                )
-
-            # ==========================================
-            # ACTUAL FILE MOVING
-            # ==========================================
-
-            else:
-
-                # Create destination folder if needed
-                destination_folder.mkdir(
-                    parents=True,
-                    exist_ok=True
-                )
-
-                # Move the file
-                item.rename(destination_path)
-
-                print(
-                    f"[MOVED] "
-                    f"{destination_path.name} -> "
-                    f"{folder_name}"
-                )
+    print()
+    print("=" * 60)
+    print("SCAN SUMMARY")
+    print("=" * 60)
+    print(f"Files planned:            {len(plan)}")
+    print(f"Folders skipped:          {stats['folders_skipped']}")
+    print(f"Active downloads skipped: {stats['active_downloads_skipped']}")
+    print(f"System files skipped:     {stats['system_files_skipped']}")
+    print(f"Symlinks skipped:         {stats['symlinks_skipped']}")
+    print(f"Organizer skipped:        {stats['self_skipped']}")
+    print(f"Planning errors:          {stats['planning_errors']}")
 
 
 # ==========================================
 # CONFIRMATION
 # ==========================================
 
-def confirm_run():
+def confirm_run(file_count):
+    expected_confirmation = f"MOVE {file_count}"
 
     print()
-    print("=" * 50)
+    print("=" * 60)
     print("WARNING")
-    print("=" * 50)
-
-    print(
-        "This script will move files "
-        "inside your Downloads folder."
-    )
-
+    print("=" * 60)
     print()
+    print(f"{file_count} file(s) will be moved inside your Downloads folder.")
     print("Archives will NOT be extracted.")
     print("Existing folders will NOT be moved.")
+    print("Files still being downloaded will be skipped.")
     print()
-    print('Type "MOVE" to continue.')
+    print(f'Type "{expected_confirmation}" to continue.')
 
     confirmation = input("> ").strip().upper()
 
-    return confirmation == "MOVE"
+    return confirmation == expected_confirmation
+
+
+# ==========================================
+# EXECUTION
+# ==========================================
+
+def execute_plan(plan):
+    moved = 0
+    errors = 0
+
+    print()
+    print("=" * 60)
+    print("ORGANIZING FILES")
+    print("=" * 60)
+    print()
+
+    for source, destination, folder_name in plan:
+        try:
+            # The preview and execution use the exact same plan.
+            # If the source changed after preview, skip it rather than guessing.
+            if not source.exists() or not source.is_file():
+                errors += 1
+                print(
+                    f"[ERROR] {source.name}: source file is no longer available."
+                )
+                continue
+
+            # If something created the approved destination after the preview,
+            # do not overwrite it. The user can run the organizer again.
+            if destination.exists():
+                errors += 1
+                print(
+                    f"[ERROR] {source.name}: destination now exists "
+                    f"({destination.name}). Run the organizer again."
+                )
+                continue
+
+            destination.parent.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+
+            source.rename(destination)
+            moved += 1
+
+            print(
+                f"[MOVED] {source.name} -> "
+                f"{folder_name}/{destination.name}"
+            )
+
+        except OSError as error:
+            errors += 1
+            print(f"[ERROR] {source.name}: {error}")
+
+    return moved, errors
+
+
+# ==========================================
+# FINAL SUMMARY
+# ==========================================
+
+def show_final_summary(planned, moved, errors):
+    not_moved = planned - moved
+
+    print()
+    print("=" * 60)
+    print("ORGANIZATION SUMMARY")
+    print("=" * 60)
+    print(f"Files planned:   {planned}")
+    print(f"Files moved:     {moved}")
+    print(f"Files not moved: {not_moved}")
+    print(f"Errors:          {errors}")
 
 
 # ==========================================
@@ -556,55 +697,45 @@ def confirm_run():
 # ==========================================
 
 def main():
-
     print()
-    print("=" * 50)
+    print("=" * 60)
     print("DOWNLOADS ORGANIZER")
-    print("=" * 50)
+    print("=" * 60)
 
-    # Check if Downloads exists
-    if not downloads_folder.exists():
+    if not DOWNLOADS_FOLDER.exists() or not DOWNLOADS_FOLDER.is_dir():
         print()
         print("Downloads folder was not found.")
-        print(downloads_folder)
+        print(f"Expected location: {DOWNLOADS_FOLDER}")
         return
 
     print()
-    print(f"Target folder: {downloads_folder}")
+    print(f"Target folder: {DOWNLOADS_FOLDER}")
 
-    print()
-    print("=" * 50)
-    print("PREVIEW")
-    print("=" * 50)
-    print()
+    # Scan only once and build an exact plan.
+    plan, stats = create_plan()
 
-    # Safe preview
-    organize_files(dry_run=True)
+    show_preview(plan, stats)
 
-    # Ask for confirmation
-    if confirm_run():
-
+    if not plan:
         print()
-        print("=" * 50)
-        print("ORGANIZING FILES")
-        print("=" * 50)
-        print()
+        print("No files need to be organized.")
+        return
 
-        organize_files(dry_run=False)
-
-        print()
-        print("=" * 50)
-        print("DONE")
-        print("=" * 50)
-
-        print()
-        print("Your Downloads folder has been organized.")
-
-    else:
-
+    if not confirm_run(len(plan)):
         print()
         print("Operation cancelled.")
         print("No files were moved.")
+        return
+
+    moved, errors = execute_plan(plan)
+    show_final_summary(len(plan), moved, errors)
+
+    if errors == 0:
+        print()
+        print("Downloads folder organized successfully.")
+    else:
+        print()
+        print("Finished with errors. Review the messages above.")
 
 
 # ==========================================
